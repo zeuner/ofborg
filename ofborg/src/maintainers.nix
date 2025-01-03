@@ -73,20 +73,22 @@ let
     (pkg: anyMatchingFiles pkg.filenames)
     attrsWithFilenames;
 
-  listToPing = pkgs.lib.lists.flatten
-    (builtins.map
-      (pkg:
-        builtins.map (maintainer: {
+  listToPing = pkgs.lib.lists.flatten (
+    builtins.map (
+      pkg:
+      builtins.map
+        (maintainer: {
           handle = pkgs.lib.toLower maintainer.github;
           packageName = pkg.name;
           dueToFiles = pkg.filenames;
         })
-        (builtins.filter
-          (maintainer:
-            pkgs.lib.hasAttrByPath ["github"] maintainer)
-          pkg.maintainers)
-      )
-      attrsWithModifiedFiles);
+        (
+          builtins.filter (
+            maintainer: pkgs.lib.hasAttrByPath [ "github" ] maintainer
+          ) pkg.maintainers
+        )
+    ) attrsWithModifiedFiles
+  );
 
   byMaintainer = pkgs.lib.lists.foldr
     (ping: collector: collector // { "${ping.handle}" = [ { inherit (ping) packageName dueToFiles; } ] ++ (collector."${ping.handle}" or []); })
